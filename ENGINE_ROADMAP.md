@@ -10,7 +10,7 @@ Build an independently implemented, testable HTML/CSS renderer for a controlled 
 | --- | --- | --- | --- |
 | 1 | 24–30 Oct | HTML tree, text layout, display list, canvas painter, Engine Lab | Local sample renders; parser and wrapping tests pass. **Started in this revision.** |
 | 2 | 31 Oct–6 Nov | Robust HTML tokenizer and tree construction for selected elements | Malformed markup fixtures recover predictably; unsupported tags are classified. Early fixes now handle quoted `>` and raw script/style content. |
-| 3 | 7–13 Nov | CSS tokenizer, selectors, cascade and inheritance | Color, font, spacing and backgrounds work in fixtures without browser CSS layout. |
+| 3 | 7–13 Nov | CSS tokenizer, selectors, cascade and inheritance | Color, font, spacing and backgrounds work in fixtures without browser CSS layout. **A limited implementation is now in the branch; broader fixtures and box layout remain.** |
 | 4 | 14–20 Nov | Block, inline and box model layout | Nested blocks, line breaks, margins and scrolling match reference screenshots within defined tolerances. |
 | 5 | 21–27 Nov | Images, links, focus, basic forms and input | Controlled local pages are usable by mouse and keyboard. |
 | 6 | 28 Nov–4 Dec | HTTP(S) resource loader and navigation history | Selected public test pages load with redirects and clear error states; no credential handling. |
@@ -19,7 +19,7 @@ Build an independently implemented, testable HTML/CSS renderer for a controlled 
 
 ## Current implementation
 
-`src/engine/html.ts` tokenizes a narrow HTML subset and builds a tree. `src/engine/layout.ts` turns that tree into positioned drawing commands. `src/features/EngineLab.tsx` paints the commands onto a canvas. Open `waterwolf://engine` or choose **Engine Lab** from the WaterWolf menu. The lab does not execute scripts, fetch remote content, implement CSS, or isolate processes. Browser canvas is currently used for text measurement and pixels; the parsing and layout decisions are WaterWolf code.
+`src/engine/html.ts` tokenizes a narrow HTML subset and builds a tree. `src/engine/css.ts` parses selected declarations, tag/class/ID and descendant selectors, then applies specificity and inline styles. `src/engine/layout.ts` turns the tree and selected CSS into positioned drawing commands. `src/features/EngineLab.tsx` paints them onto a canvas. Open `waterwolf://engine` or choose **Engine Lab** from the WaterWolf menu. The lab does not execute scripts, fetch remote content, implement the full CSS box model, or isolate processes. Browser canvas is currently used for text measurement and pixels; the parsing and layout decisions are WaterWolf code.
 
 ## Quality gates
 
