@@ -1,7 +1,7 @@
 import { describe,expect,it } from 'vitest';
 import { cascade,parseCss } from './css';
 import { findElement,parseHtml } from './html';
-import { layoutHtml } from './layout';
+import { layoutHtml,linkAt } from './layout';
 
 describe('WaterWolf CSS subset',()=>{
  it('applies selector specificity and inline styles',()=>{
@@ -34,5 +34,28 @@ describe('WaterWolf CSS subset',()=>{
   const compact=layoutHtml('<head><style>p { margin-bottom: 0px }</style></head><body><p>One</p><p>Two</p></body>',500,text=>text.length*8);
   const second=(page:typeof normal)=>page.commands.find(command=>command.kind==='text'&&command.text==='Two')?.y??0;
   expect(second(compact)).toBeLessThan(second(normal));
+ });
+ it('lays out text inside a padded, bordered box with an explicit width',()=>{
+  const page=layoutHtml('<head><style>.card { width: 120px; padding: 12px; border: 2px solid blue; background-color: #eef6ff }</style></head><body><div class="card">alpha beta gamma delta</div></body>',500,text=>text.length*10);
+  const box=page.commands.find(command=>command.kind==='box');
+  const words=page.commands.filter(command=>command.kind==='text');
+  expect(box).toMatchObject({x:28,width:148,borderWidth:2,borderColor:'#0000ff',background:'#eef6ff'});
+  expect(words.every(command=>command.kind==='text'&&command.x>=42&&command.x<176)).toBe(true);
+  expect(new Set(words.map(command=>command.y)).size).toBeGreaterThan(1);
+ });
+ it('keeps nested block text within its parent content edge',()=>{
+  const page=layoutHtml('<body><section style="padding: 20px; border: 1px solid navy"><p>Inside</p></section><p>Outside</p></body>',500,text=>text.length*8);
+  const inside=page.commands.find(command=>command.kind==='text'&&command.text==='Inside');
+  const outside=page.commands.find(command=>command.kind==='text'&&command.text==='Outside');
+  expect(inside?.x).toBe(49);
+  expect(outside?.x).toBe(28);
+ });
+ it('identifies a painted link without treating surrounding text as a link',()=>{
+  const page=layoutHtml('<body><p>Before <a href="https://example.com">Visit</a> after</p></body>',500,text=>text.length*9);
+  const link=page.commands.find(command=>command.kind==='text'&&command.text==='Visit');
+  const before=page.commands.find(command=>command.kind==='text'&&command.text==='Before');
+  if(link?.kind!=='text'||before?.kind!=='text')throw Error('Expected text commands');
+  expect(linkAt(page,link.x+2,link.y-2)).toBe('https://example.com');
+  expect(linkAt(page,before.x+2,before.y-2)).toBeNull();
  });
 });

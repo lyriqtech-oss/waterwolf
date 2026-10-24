@@ -2,7 +2,7 @@ import type { EngineNode } from './html';
 type Element=Extract<EngineNode,{kind:'element'}>;
 export type CssDeclaration={property:string;value:string};
 export type CssRule={selector:string;declarations:CssDeclaration[];specificity:number;order:number};
-const supported=new Set(['color','background-color','font-size','font-weight','line-height','margin-top','margin-bottom']);
+const supported=new Set(['color','background-color','font-size','font-weight','line-height','margin-top','margin-bottom','width','padding','border']);
 
 export function parseDeclarations(source:string):CssDeclaration[]{
  return source.split(';').map(chunk=>{const colon=chunk.indexOf(':');return colon<0?null:{property:chunk.slice(0,colon).trim().toLowerCase(),value:chunk.slice(colon+1).trim()}}).filter((item):item is CssDeclaration=>Boolean(item&&supported.has(item.property)&&item.value));
