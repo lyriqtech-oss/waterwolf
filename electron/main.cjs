@@ -1,10 +1,12 @@
 const path = require('node:path');
 const { app, BrowserWindow, WebContentsView, ipcMain, session } = require('electron');
+const ai = require('./ai.cjs');
 
 let window;
 let activeTabId = null;
 let contentBounds = { x: 0, y: 89, width: 0, height: 0 };
 const views = new Map();
+const pendingSummaries = new Map();
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,100}$/;
 
 function requireShell(event) {
@@ -55,7 +57,7 @@ function makeView(id, spaceId) {
   contents.on('will-navigate', (event, url) => {
     try { externalUrl(url); } catch { event.preventDefault(); }
   });
-  contents.on('did-navigate', (_event, url) => emit(tab, { url }));
+  contents.on('did-navigate', (_event, url) => { pendingSummaries.delete(id); emit(tab, { url }); });
   contents.on('did-navigate-in-page', (_event, url, isMainFrame) => { if (isMainFrame) emit(tab, { url }); });
   contents.on('page-title-updated', (_event, title) => emit(tab, { title: title.slice(0, 250) }));
   contents.on('did-start-loading', () => emit(tab, { status: 'loading' }));
@@ -69,6 +71,28 @@ function makeView(id, spaceId) {
 }
 
 function registerHandlers() {
+  ipcMain.handle('waterwolf:ai-status', event => { requireShell(event); return ai.status(); });
+  ipcMain.handle('waterwolf:ai-save', (event, settings) => { requireShell(event); return ai.save(settings); });
+  ipcMain.handle('waterwolf:ai-remove', event => { requireShell(event); return ai.remove(); });
+  ipcMain.handle('waterwolf:ai-preview', async (event, rawId) => {
+    requireShell(event);
+    const id = tabId(rawId);
+    const snapshot = await ai.preview(views.get(id)?.view.webContents);
+    pendingSummaries.set(id, { snapshot, createdAt: Date.now() });
+    return snapshot;
+  });
+  ipcMain.handle('waterwolf:ai-summarize', async (event, rawId, expectedUrl) => {
+    requireShell(event);
+    const id = tabId(rawId);
+    if (typeof expectedUrl !== 'string' || expectedUrl.length > 8192) throw new Error('Invalid page');
+    const pending = pendingSummaries.get(id);
+    pendingSummaries.delete(id);
+    const contents = views.get(id)?.view.webContents;
+    if (!pending || Date.now() - pending.createdAt > 300000 || !contents || contents.isDestroyed() || pending.snapshot.url !== expectedUrl || contents.getURL() !== expectedUrl) {
+      throw new Error('The page changed or the review expired. Review it again before sending.');
+    }
+    return ai.summarize(pending.snapshot);
+  });
   ipcMain.handle('waterwolf:navigate', async (event, rawId, rawUrl, spaceId) => {
     requireShell(event);
     const id = tabId(rawId);
@@ -108,6 +132,7 @@ function registerHandlers() {
     window.contentView.removeChildView(tab.view);
     tab.view.webContents.close();
     views.delete(id);
+    pendingSummaries.delete(id);
     if (activeTabId === id) activeTabId = null;
   });
   for (const action of ['back', 'forward', 'reload']) {
@@ -129,6 +154,7 @@ app.whenReady().then(async () => {
   window = new BrowserWindow({
     width: 1500, height: 920, minWidth: 860, minHeight: 600,
     title: 'WaterWolf Browser', backgroundColor: '#F7F9FC',
+    icon: path.join(__dirname, '..', 'public', 'waterwolf-icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       sandbox: true, contextIsolation: true, nodeIntegration: false, webSecurity: true

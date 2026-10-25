@@ -7,6 +7,11 @@ export interface DesktopTabUpdate {
 }
 
 export interface DesktopBrowser {
+  aiStatus(): Promise<{ configured: boolean; model: string }>;
+  aiSave(settings: { key: string; model: string }): Promise<{ configured: boolean; model: string }>;
+  aiRemove(): Promise<{ configured: boolean; model: string }>;
+  aiPreview(tabId: string): Promise<{ url: string; title: string; text: string; truncated: boolean }>;
+  aiSummarize(tabId: string, url: string): Promise<string>;
   navigate(tabId: string, url: string, spaceId: string): Promise<{ ok: boolean }>;
   select(tabId: string | null): Promise<void>;
   layout(bounds: { x: number; y: number; width: number; height: number }): Promise<void>;

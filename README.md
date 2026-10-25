@@ -22,8 +22,17 @@ For checks:
 ```bash
 npm run typecheck
 npm test
+npm run test:desktop
 npm run build
 ```
+
+To build a portable Windows executable with the WaterWolf icon:
+
+```bash
+npm run pack:win
+```
+
+The result is `release/WaterWolf-0.1.0-x64.exe`. This development build is not code signed.
 
 Opening `index.html` directly as a `file://` URL does not run the Vite app. Use the dev server or serve `dist/` after building.
 
@@ -32,6 +41,7 @@ Opening `index.html` directly as a `file://` URL does not run the Vite app. Use 
 - Browser shell with horizontal or vertical tabs, omnibox, sidebar, five Spaces, tab search, Split View, New Tab and internal `waterwolf://` pages.
 - Desktop browsing: HTTP/HTTPS sites open in Chromium-backed tabs inside the WaterWolf window. The address bar searches DuckDuckGo by default; Google and Bing can be chosen during onboarding. Search results retain the provider's own page design. The web preview still shows a local WaterWolf Search mockup.
 - Desktop tabs use separate persistent Chromium sessions for each Space. Popups open as WaterWolf tabs. Site permission requests are denied until a proper permission interface exists.
+- Optional OpenAI connection in Settings → AI: save an API key using Electron's operating-system-backed safe storage, choose a model, and remove the key. On an external page, select the AI button in the toolbar to review the extracted text and explicitly approve sending it for a short summary. No key is bundled, and provider calls may cost money. This has been tested through the consent screen with a disposable key; a paid API response has not been tested.
 - Local bookmarks: save or edit the current page from the toolbar, search saved pages, reopen them, and remove them. Bookmarks persist in this browser's local storage.
 - Engine Lab at `waterwolf://engine`: an independent HTML/CSS-subset parser and layout prototype that paints onto canvas. It supports selected selectors, colors, fonts, margins, box width, padding and borders. Controlled local documents have engine-owned back/forward history; text fields and buttons are drawn on canvas with accessible controls beneath the preview. See [ENGINE_ROADMAP.md](ENGINE_ROADMAP.md) for the eight-week research plan.
 - Lyriq Command (`Ctrl/Cmd + K`), WaterWolf Actions menu, Agent Center, Shield UI, ecosystem drawer, Settings, Model Hub, Workspace, Files, Vault, Agent Pay, Schools, VOXA, Billing and About.
@@ -44,7 +54,7 @@ Keyboard: `Ctrl/Cmd + T` opens a tab, `Ctrl/Cmd + W` closes one, `Ctrl/Cmd + Shi
 
 ## Current boundaries
 
-The desktop app uses Electron's Chromium runtime for real pages; it is not yet a standalone Chromium fork or a production browser. The research engine in `src/engine/` remains independent. WebExtensions, Shield blocking, downloads UI, browsing history, private browsing, sync, local inference, Lyriq Cloud, agent execution and payments are not connected. Site permissions are currently denied. Bookmarks and onboarding choices are stored in the local app profile. Other settings are preview state and reset on reload. The web preview at the Vite URL cannot embed arbitrary external sites.
+The desktop app uses Electron's Chromium runtime for real pages; it is not yet a standalone Chromium fork or a production browser. The research engine in `src/engine/` remains independent. WebExtensions, Shield blocking, downloads UI, browsing history, private browsing, sync, local inference, Lyriq Cloud, agent execution and payments are not connected. Site permissions are currently denied. Bookmarks and onboarding choices are stored in the local app profile. Other settings are preview state and reset on reload. The web preview at the Vite URL cannot embed arbitrary external sites. The desktop window and packaged Windows executable now use the WaterWolf icon; the `npm run desktop` development launcher may still appear as Electron in Windows process listings.
 
 The included agent cards are examples. No agent runs in this build. The registry is deny-by-default, and sensitive tools require a matching one-time approval. Production integration also needs isolated execution, authenticated identities, persisted and expiring grants, durable audit records, and browser-process enforcement.
 

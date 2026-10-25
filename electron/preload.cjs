@@ -8,6 +8,11 @@ contextBridge.exposeInMainWorld('waterwolfDesktop', {
   back: tabId => ipcRenderer.invoke('waterwolf:back', tabId),
   forward: tabId => ipcRenderer.invoke('waterwolf:forward', tabId),
   reload: tabId => ipcRenderer.invoke('waterwolf:reload', tabId),
+  aiStatus: () => ipcRenderer.invoke('waterwolf:ai-status'),
+  aiSave: settings => ipcRenderer.invoke('waterwolf:ai-save', settings),
+  aiRemove: () => ipcRenderer.invoke('waterwolf:ai-remove'),
+  aiPreview: tabId => ipcRenderer.invoke('waterwolf:ai-preview', tabId),
+  aiSummarize: (tabId, url) => ipcRenderer.invoke('waterwolf:ai-summarize', tabId, url),
   onTabUpdate: callback => {
     const listener = (_event, update) => callback(update);
     ipcRenderer.on('waterwolf:tab-update', listener);
