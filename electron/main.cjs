@@ -7,6 +7,7 @@ let activeTabId = null;
 let contentBounds = { x: 0, y: 89, width: 0, height: 0 };
 const views = new Map();
 const pendingSummaries = new Map();
+const pendingResearch = new Map();
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,100}$/;
 
 function requireShell(event) {
@@ -93,6 +94,32 @@ function registerHandlers() {
       throw new Error('The page changed or the review expired. Review it again before sending.');
     }
     return ai.summarize(pending.snapshot);
+  });
+  ipcMain.handle('waterwolf:agent-preview', async (event, rawIds) => {
+    requireShell(event);
+    const providerStatus = await ai.status();
+    if (!providerStatus.configured) throw new Error('Connect an AI provider in Settings first.');
+    if (!Array.isArray(rawIds) || rawIds.length < 1 || rawIds.length > 3) throw new Error('Choose 1–3 open tabs.');
+    const ids = rawIds.map(tabId);
+    if (new Set(ids).size !== ids.length) throw new Error('Choose different tabs.');
+    const snapshots = await Promise.all(ids.map(id => ai.preview(views.get(id)?.view.webContents)));
+    const token = require('node:crypto').randomUUID();
+    pendingResearch.clear();
+    pendingResearch.set(token, { ids, snapshots, provider: providerStatus.provider, createdAt: Date.now() });
+    return { token, pages: snapshots.map(({ url, title, text, truncated }) => ({ url, title, characters: text.length, truncated })) };
+  });
+  ipcMain.handle('waterwolf:agent-run', async (event, token, question) => {
+    requireShell(event);
+    if (typeof token !== 'string' || token.length > 100) throw new Error('Invalid review');
+    const pending = pendingResearch.get(token);
+    pendingResearch.delete(token);
+    if (!pending || Date.now() - pending.createdAt > 300000) throw new Error('Review expired. Review the pages again.');
+    if ((await ai.status()).provider !== pending.provider) throw new Error('The AI provider changed. Review the pages again.');
+    for (let index = 0; index < pending.ids.length; index++) {
+      const contents = views.get(pending.ids[index])?.view.webContents;
+      if (!contents || contents.isDestroyed() || contents.getURL() !== pending.snapshots[index].url) throw new Error('A page changed. Review the pages again.');
+    }
+    return ai.research(question, pending.snapshots);
   });
   ipcMain.handle('waterwolf:navigate', async (event, rawId, rawUrl, spaceId) => {
     requireShell(event);

@@ -13,6 +13,8 @@ export interface DesktopBrowser {
   aiRemove(): Promise<{ configured: boolean; provider: 'openai' | 'gemini'; model: string }>;
   aiPreview(tabId: string): Promise<{ url: string; title: string; text: string; truncated: boolean }>;
   aiSummarize(tabId: string, url: string): Promise<string>;
+  agentPreview(tabIds: string[]): Promise<{ token: string; pages: { url: string; title: string; characters: number; truncated: boolean }[] }>;
+  agentRun(token: string, question: string): Promise<string>;
   navigate(tabId: string, url: string, spaceId: string): Promise<{ ok: boolean }>;
   select(tabId: string | null): Promise<void>;
   layout(bounds: { x: number; y: number; width: number; height: number }): Promise<void>;

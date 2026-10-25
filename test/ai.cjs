@@ -61,3 +61,21 @@ test('Gemini sends the key in a header and extracts the generated text', async (
   assert.equal(body.generationConfig.maxOutputTokens, 32);
   assert.match(body.contents[0].parts[0].text, /single word OK/);
 });
+
+test('research uses only selected snapshots with source labels and enforces limits', async () => {
+  await ai.save({ provider: 'gemini', key: 'gemini-localtest12345', model: 'gemini-2.5-flash' });
+  let request;
+  const originalFetch = global.fetch;
+  global.fetch = async (_url, options) => {
+    request = JSON.parse(options.body);
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: 'Finding [1].' }] } }] }) };
+  };
+  try {
+    await assert.rejects(ai.research('Why?', []), /5–1000/);
+    await assert.rejects(ai.research('Compare pages', Array(4).fill({})), /1–3/);
+    assert.equal(await ai.research('Compare pages', [{ title: 'First', url: 'https://example.com', text: 'Evidence one.' }]), 'Finding [1].');
+  } finally { global.fetch = originalFetch; await ai.remove(); }
+  assert.match(request.contents[0].parts[0].text, /\[1\] First/);
+  assert.match(request.contents[0].parts[0].text, /Evidence one/);
+  assert.match(request.system_instruction.parts[0].text, /untrusted data/);
+});

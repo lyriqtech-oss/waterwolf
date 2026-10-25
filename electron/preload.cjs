@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('waterwolfDesktop', {
   aiRemove: () => ipcRenderer.invoke('waterwolf:ai-remove'),
   aiPreview: tabId => ipcRenderer.invoke('waterwolf:ai-preview', tabId),
   aiSummarize: (tabId, url) => ipcRenderer.invoke('waterwolf:ai-summarize', tabId, url),
+  agentPreview: tabIds => ipcRenderer.invoke('waterwolf:agent-preview', tabIds),
+  agentRun: (token, question) => ipcRenderer.invoke('waterwolf:agent-run', token, question),
   onTabUpdate: callback => {
     const listener = (_event, update) => callback(update);
     ipcRenderer.on('waterwolf:tab-update', listener);
