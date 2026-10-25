@@ -7,6 +7,10 @@ export interface DesktopTabUpdate {
 }
 
 export interface DesktopBrowser {
+  agentLiveRun(runId: string, question: string): Promise<{ sessionId: string; answer: string; sources: { number: number; title: string; url: string }[] }>;
+  agentLiveCancel(runId: string): Promise<boolean>;
+  agentLiveAsk(sessionId: string, question: string): Promise<string>;
+  onAgentLiveProgress(callback: (update: { runId: string; stage: string; message: string; url?: string; title?: string; sourceIndex?: number }) => void): () => void;
   securityStatus(): Promise<{ permissions: number; downloads: number; navigation: number; downloadsBlocked: boolean; permissionsDenied: boolean; unsafeSchemesBlocked: boolean }>;
   onSecurityEvent(callback: (message: string) => void): () => void;
   aiStatus(): Promise<{ configured: boolean; provider: 'openai' | 'gemini'; model: string }>;

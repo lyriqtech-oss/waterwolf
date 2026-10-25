@@ -2,6 +2,7 @@ const path = require('node:path');
 const { app, BrowserWindow, WebContentsView, ipcMain, session } = require('electron');
 const ai = require('./ai.cjs');
 const { externalUrl, createSecurityState } = require('./security.cjs');
+const { createLiveAgent } = require('./live-agent.cjs');
 
 let window;
 let activeTabId = null;
@@ -11,6 +12,9 @@ const pendingSummaries = new Map();
 const pendingResearch = new Map();
 const protectedSessions = new Set();
 const security = createSecurityState();
+const liveAgent = createLiveAgent({ protectSession, emit: update => {
+  if (window && !window.isDestroyed()) window.webContents.send('waterwolf:agent-live-progress', update);
+} });
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,100}$/;
 
 function requireShell(event) {
@@ -102,6 +106,9 @@ function makeView(id, spaceId) {
 }
 
 function registerHandlers() {
+  ipcMain.handle('waterwolf:agent-live-run', (event, runId, question) => { requireShell(event); return liveAgent.run(runId, question); });
+  ipcMain.handle('waterwolf:agent-live-cancel', (event, runId) => { requireShell(event); return liveAgent.cancel(runId); });
+  ipcMain.handle('waterwolf:agent-live-ask', (event, sessionId, question) => { requireShell(event); return liveAgent.ask(sessionId, question); });
   ipcMain.handle('waterwolf:security-status', event => { requireShell(event); return security.status(); });
   ipcMain.handle('waterwolf:ai-status', event => { requireShell(event); return ai.status(); });
   ipcMain.handle('waterwolf:ai-save', (event, settings) => { requireShell(event); return ai.save(settings); });

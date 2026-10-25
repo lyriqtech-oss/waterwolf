@@ -79,3 +79,21 @@ test('research uses only selected snapshots with source labels and enforces limi
   assert.match(request.contents[0].parts[0].text, /Evidence one/);
   assert.match(request.system_instruction.parts[0].text, /untrusted data/);
 });
+
+test('follow-up includes the prior conversation and original numbered sources', async () => {
+  await ai.save({ provider: 'gemini', key: 'gemini-localtest12345', model: 'gemini-2.5-flash' });
+  let request;
+  const originalFetch = global.fetch;
+  global.fetch = async (_url, options) => {
+    request = JSON.parse(options.body);
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: 'Clarification [1].' }] } }] }) };
+  };
+  try {
+    assert.equal(await ai.followUp('What does it mean?', [{ title: 'First', url: 'https://example.com/', text: 'Original evidence.' }], [{ role: 'user', text: 'Initial question' }, { role: 'assistant', text: 'Initial answer [1].' }]), 'Clarification [1].');
+  } finally { global.fetch = originalFetch; await ai.remove(); }
+  const prompt = request.contents[0].parts[0].text;
+  assert.match(prompt, /Original evidence/);
+  assert.match(prompt, /Initial answer \[1\]/);
+  assert.match(prompt, /What does it mean/);
+  assert.match(request.system_instruction.parts[0].text, /independent websites/);
+});
