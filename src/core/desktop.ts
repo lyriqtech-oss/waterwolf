@@ -7,6 +7,8 @@ export interface DesktopTabUpdate {
 }
 
 export interface DesktopBrowser {
+  securityStatus(): Promise<{ permissions: number; downloads: number; navigation: number; downloadsBlocked: boolean; permissionsDenied: boolean; unsafeSchemesBlocked: boolean }>;
+  onSecurityEvent(callback: (message: string) => void): () => void;
   aiStatus(): Promise<{ configured: boolean; provider: 'openai' | 'gemini'; model: string }>;
   aiSave(settings: { provider: 'openai' | 'gemini'; key: string; model: string }): Promise<{ configured: boolean; provider: 'openai' | 'gemini'; model: string }>;
   aiTest(): Promise<string>;

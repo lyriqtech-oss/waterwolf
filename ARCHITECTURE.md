@@ -28,7 +28,7 @@ The first research agent reads up to three already open tabs after the user choo
 
 ## Browser integration
 
-The first privileged host uses Electron `WebContentsView` for external HTTP/HTTPS pages. The shell calls only validated IPC actions, and external pages have no preload or Node access. The host sends URL, title and loading events back to React. Popup requests become WaterWolf tabs, unsupported schemes are blocked, and site permissions are denied. The next milestones must add downloads, history, extension and security events, permission prompts, certificate error handling and robust CSP for the shell.
+The first privileged host uses Electron `WebContentsView` for external HTTP/HTTPS pages. The shell calls only validated IPC actions, and external pages have no preload or Node access. The host sends URL, title and loading events back to React. Popup requests become WaterWolf tabs. Unsupported schemes, redirects, credential-bearing addresses, site permission requests and checks, and all downloads are blocked. The app shell has a Content Security Policy; the renderer cannot access the privileged session objects. Shield reports local aggregate counts without retaining requested URLs. Chromium handles TLS certificate rejection by default. The next milestones must add a reviewed download workflow with scanning, phishing/malware reputation, history, extensions, granular permission prompts, and active tracker blocking.
 
 Spaces group tabs and use separate persistent Chromium partitions for cookies and site storage. Full Space isolation still needs separate history, credentials, extensions, agents and optional proxy settings.
 

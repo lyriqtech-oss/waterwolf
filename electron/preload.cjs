@@ -16,6 +16,12 @@ contextBridge.exposeInMainWorld('waterwolfDesktop', {
   aiSummarize: (tabId, url) => ipcRenderer.invoke('waterwolf:ai-summarize', tabId, url),
   agentPreview: tabIds => ipcRenderer.invoke('waterwolf:agent-preview', tabIds),
   agentRun: (token, question) => ipcRenderer.invoke('waterwolf:agent-run', token, question),
+  securityStatus: () => ipcRenderer.invoke('waterwolf:security-status'),
+  onSecurityEvent: callback => {
+    const listener = (_event, message) => callback(message);
+    ipcRenderer.on('waterwolf:security-event', listener);
+    return () => ipcRenderer.removeListener('waterwolf:security-event', listener);
+  },
   onTabUpdate: callback => {
     const listener = (_event, update) => callback(update);
     ipcRenderer.on('waterwolf:tab-update', listener);

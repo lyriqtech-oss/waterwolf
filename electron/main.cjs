@@ -1,6 +1,7 @@
 const path = require('node:path');
 const { app, BrowserWindow, WebContentsView, ipcMain, session } = require('electron');
 const ai = require('./ai.cjs');
+const { externalUrl, createSecurityState } = require('./security.cjs');
 
 let window;
 let activeTabId = null;
@@ -8,17 +9,12 @@ let contentBounds = { x: 0, y: 89, width: 0, height: 0 };
 const views = new Map();
 const pendingSummaries = new Map();
 const pendingResearch = new Map();
+const protectedSessions = new Set();
+const security = createSecurityState();
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,100}$/;
 
 function requireShell(event) {
   if (!window || event.sender !== window.webContents) throw new Error('Unauthorized sender');
-}
-
-function externalUrl(value) {
-  if (typeof value !== 'string' || value.length > 8192) throw new Error('Invalid address');
-  const url = new URL(value);
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('Only HTTP and HTTPS pages can be opened');
-  return url.href;
 }
 
 function tabId(value) {
@@ -29,6 +25,25 @@ function tabId(value) {
 function emit(tab, patch) {
   if (!window || window.isDestroyed()) return;
   window.webContents.send('waterwolf:tab-update', { tabId: tab.id, ...patch });
+}
+
+function securityNotice(message) {
+  if (window && !window.isDestroyed()) window.webContents.send('waterwolf:security-event', message);
+}
+
+function protectSession(webSession) {
+  if (protectedSessions.has(webSession)) return;
+  protectedSessions.add(webSession);
+  webSession.setPermissionRequestHandler((_contents, _permission, callback) => {
+    security.record('permissions');
+    callback(false);
+  });
+  webSession.setPermissionCheckHandler(() => false);
+  webSession.on('will-download', event => {
+    security.record('downloads');
+    event.preventDefault();
+    securityNotice('Download blocked. File scanning and safe downloads are not available yet.');
+  });
 }
 
 function showActiveView() {
@@ -44,19 +59,25 @@ function makeView(id, spaceId) {
   const safeSpace = typeof spaceId === 'string' && ID_PATTERN.test(spaceId) ? spaceId : 'personal';
   const partition = `persist:waterwolf-space-${safeSpace}`;
   const webSession = session.fromPartition(partition);
-  webSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+  protectSession(webSession);
   const view = new WebContentsView({ webPreferences: {
     sandbox: true, contextIsolation: true, nodeIntegration: false, webSecurity: true,
-    partition
+    webviewTag: false, allowRunningInsecureContent: false, partition
   } });
   const tab = { id, view };
   const contents = view.webContents;
+  contents.on('will-attach-webview', event => event.preventDefault());
   contents.setWindowOpenHandler(({ url }) => {
-    try { window?.webContents.send('waterwolf:new-window', externalUrl(url)); } catch { /* Unsupported schemes stay blocked. */ }
+    try { window?.webContents.send('waterwolf:new-window', externalUrl(url)); }
+    catch { security.record('navigation'); securityNotice('Blocked a popup with an unsafe address.'); }
     return { action: 'deny' };
   });
   contents.on('will-navigate', (event, url) => {
-    try { externalUrl(url); } catch { event.preventDefault(); }
+    try { externalUrl(url); } catch { event.preventDefault(); security.record('navigation'); securityNotice('Blocked navigation to an unsafe address.'); }
+  });
+  contents.on('will-redirect', event => {
+    if (!event.isMainFrame) return;
+    try { externalUrl(event.url); } catch { event.preventDefault(); security.record('navigation'); securityNotice('Blocked an unsafe redirect.'); }
   });
   contents.on('did-navigate', (_event, url) => { pendingSummaries.delete(id); emit(tab, { url }); });
   contents.on('did-navigate-in-page', (_event, url, isMainFrame) => { if (isMainFrame) emit(tab, { url }); });
@@ -72,6 +93,7 @@ function makeView(id, spaceId) {
 }
 
 function registerHandlers() {
+  ipcMain.handle('waterwolf:security-status', event => { requireShell(event); return security.status(); });
   ipcMain.handle('waterwolf:ai-status', event => { requireShell(event); return ai.status(); });
   ipcMain.handle('waterwolf:ai-save', (event, settings) => { requireShell(event); return ai.save(settings); });
   ipcMain.handle('waterwolf:ai-test', event => { requireShell(event); return ai.testConnection(); });
@@ -177,7 +199,7 @@ function registerHandlers() {
 }
 
 app.whenReady().then(async () => {
-  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+  protectSession(session.defaultSession);
   registerHandlers();
   window = new BrowserWindow({
     width: 1500, height: 920, minWidth: 860, minHeight: 600,
