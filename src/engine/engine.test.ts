@@ -1,6 +1,6 @@
 import { describe,expect,it } from 'vitest';
 import { findElement,nodeText,parseHtml } from './html';
-import { layoutHtml } from './layout';
+import { controlAt,layoutHtml } from './layout';
 
 describe('WaterWolf research engine',()=>{
  it('parses nested elements, attributes and character references',()=>{
@@ -31,5 +31,18 @@ describe('WaterWolf research engine',()=>{
   const root=parseHtml('<body><script>if (a < b) document.write("<h1>Injected</h1>")</script><p>Safe</p></body>');
   expect(findElement(root,'h1')).toBeNull();
   expect(findElement(root,'p')&&nodeText(findElement(root,'p')!)).toBe('Safe');
+ });
+ it('lays out a local text field and button with form association',()=>{
+  const page=layoutHtml('<body><form id="hello"><input id="name" name="name" type="text" placeholder="Your name"><button>Send</button></form></body>',500,text=>text.length*9,{name:'Wolf'});
+  const controls=page.commands.filter(command=>command.kind==='control');
+  expect(controls).toHaveLength(2);
+  expect(controls[0]).toMatchObject({control:'input',id:'name',name:'name',formId:'hello',value:'Wolf'});
+  expect(controls[1]).toMatchObject({control:'button',formId:'hello',label:'Send'});
+  const input=controls[0];if(input?.kind!=='control')throw Error('Missing input');
+  expect(controlAt(page,input.x+5,input.y+5)?.id).toBe('name');
+ });
+ it('does not create an editable control for unsupported input types',()=>{
+  const page=layoutHtml('<body><input type="password" name="secret"></body>',500,text=>text.length*8);
+  expect(page.commands.some(command=>command.kind==='control')).toBe(false);
  });
 });

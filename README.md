@@ -25,7 +25,7 @@ Opening `index.html` directly as a `file://` URL does not run the Vite app. Use 
 
 - Browser shell with horizontal or vertical tabs, omnibox, sidebar, five Spaces, tab search, Split View, New Tab and internal `waterwolf://` pages.
 - Local bookmarks: save or edit the current page from the toolbar, search saved pages, reopen them, and remove them. Bookmarks persist in this browser's local storage.
-- Engine Lab at `waterwolf://engine`: an independent HTML/CSS-subset parser and layout prototype that paints onto canvas. It supports selected selectors, colors, fonts, margins, box width, padding, borders and link target inspection. See [ENGINE_ROADMAP.md](ENGINE_ROADMAP.md) for the eight-week research plan.
+- Engine Lab at `waterwolf://engine`: an independent HTML/CSS-subset parser and layout prototype that paints onto canvas. It supports selected selectors, colors, fonts, margins, box width, padding and borders. Controlled local documents have engine-owned back/forward history; text fields and buttons are drawn on canvas with accessible controls beneath the preview. See [ENGINE_ROADMAP.md](ENGINE_ROADMAP.md) for the eight-week research plan.
 - Lyriq Command (`Ctrl/Cmd + K`), WaterWolf Actions menu, Agent Center, Shield UI, ecosystem drawer, Settings, Model Hub, Workspace, Files, Vault, Agent Pay, Schools, VOXA, Billing and About.
 - First-run onboarding with optional account and AI choices. No diagnostics leave the preview.
 - Light, dark and private visual states, responsive layouts, keyboard shortcuts, reduced-motion styling, and the refined vector wolf/wave symbol in `public/waterwolf-mark.svg` and `src/assets/BrandMark.tsx`.

@@ -58,4 +58,11 @@ describe('WaterWolf CSS subset',()=>{
   expect(linkAt(page,link.x+2,link.y-2)).toBe('https://example.com');
   expect(linkAt(page,before.x+2,before.y-2)).toBeNull();
  });
+ it('ends a form box before the following paragraph',()=>{
+  const page=layoutHtml('<body><form style="padding: 18px; border: 1px solid blue"><input id="name" type="text"><button>Send</button></form><p>Outside</p></body>',500,text=>text.length*8);
+  const box=page.commands.find(command=>command.kind==='box');
+  const outside=page.commands.find(command=>command.kind==='text'&&command.text==='Outside');
+  if(box?.kind!=='box'||outside?.kind!=='text')throw Error('Expected box and paragraph');
+  expect(box.y+box.height).toBeLessThan(outside.y-8);
+ });
 });
