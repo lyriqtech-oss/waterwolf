@@ -66,10 +66,19 @@ function makeView(id, spaceId) {
   } });
   const tab = { id, view };
   const contents = view.webContents;
+  let popupTimes = [];
   contents.on('will-attach-webview', event => event.preventDefault());
   contents.setWindowOpenHandler(({ url }) => {
+    const now = Date.now();
+    popupTimes = popupTimes.filter(time => now - time < 30000);
+    if (popupTimes.length >= 3) {
+      security.record('navigation');
+      securityNotice('Blocked repeated popups from this site.');
+      return { action: 'deny' };
+    }
     try { window?.webContents.send('waterwolf:new-window', externalUrl(url)); }
-    catch { security.record('navigation'); securityNotice('Blocked a popup with an unsafe address.'); }
+    catch { security.record('navigation'); securityNotice('Blocked a popup with an unsafe address.'); return { action: 'deny' }; }
+    popupTimes.push(now);
     return { action: 'deny' };
   });
   contents.on('will-navigate', (event, url) => {
@@ -218,7 +227,7 @@ app.whenReady().then(async () => {
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   const devUrl = process.env.WATERWOLF_DEV_URL;
-  if (devUrl && /^http:\/\/(127\.0\.0\.1|localhost):\d+\/?$/.test(devUrl)) await window.loadURL(devUrl);
+  if (!app.isPackaged && devUrl && /^http:\/\/(127\.0\.0\.1|localhost):\d+\/?$/.test(devUrl)) await window.loadURL(devUrl);
   else await window.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
 });
 
