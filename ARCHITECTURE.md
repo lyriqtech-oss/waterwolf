@@ -5,14 +5,14 @@
 ```text
 React UI + Zustand state
         ↓
-BrowserEngineAdapter · AgentToolRegistry · LocalModelProvider · Model Router
+Electron IPC bridge → Chromium WebContentsView per external tab
         ↓
-Future Chromium integration and Lyriq services
+BrowserEngineAdapter · AgentToolRegistry · LocalModelProvider · Model Router
 ```
 
 The experimental `src/engine/` module is a separate HTML-subset parser, layout engine and display-list painter. It is available in `waterwolf://engine` for local research fixtures. It is not connected to ordinary tabs or external navigation. Its eight-week plan and safety gates are in [ENGINE_ROADMAP.md](ENGINE_ROADMAP.md).
 
-`src/components/` owns chrome and overlays. `src/features/` owns pages and onboarding. `src/stores/` owns demo state. `src/core/` owns contracts and policies. A future desktop host may use Chromium source, CEF, or a fork; no Electron dependency is assumed.
+`src/components/` owns chrome and overlays. `src/features/` owns pages and onboarding. `src/stores/` owns UI state. `src/core/` owns contracts and policies. `electron/` is the current desktop host; its narrow preload API isolates the React shell from privileged Electron calls.
 
 ## Three product modes
 
@@ -24,9 +24,9 @@ The router keeps tier-0 actions deterministic, prefers a local provider for simp
 
 ## Browser integration
 
-Replace `previewEngine` with a privileged process adapter. UI code should never gain direct access to Chromium internals. The host must emit tab, navigation, download, history, extension, security, and resource-use events back to state stores. Internal URLs must be resolved by a trusted handler. External pages must run in Chromium's isolated site processes, with CSP and sandboxing enforced outside React.
+The first privileged host uses Electron `WebContentsView` for external HTTP/HTTPS pages. The shell calls only validated IPC actions, and external pages have no preload or Node access. The host sends URL, title and loading events back to React. Popup requests become WaterWolf tabs, unsupported schemes are blocked, and site permissions are denied. The next milestones must add downloads, history, extension and security events, permission prompts, certificate error handling and robust CSP for the shell.
 
-Spaces currently group tabs. The host must partition cookies, storage, sessions, history, credentials, extensions, agents and optional proxy settings by Space before claiming isolation.
+Spaces group tabs and use separate persistent Chromium partitions for cookies and site storage. Full Space isolation still needs separate history, credentials, extensions, agents and optional proxy settings.
 
 ## Agents and approval
 
