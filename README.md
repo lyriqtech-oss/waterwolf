@@ -34,6 +34,14 @@ npm run pack:win
 
 The result is `release/WaterWolf-0.1.0-x64.exe`. This development build is not code signed.
 
+To build a Windows installer with an installation wizard, desktop shortcut, and Start menu entry:
+
+```bash
+npm run pack:win:installer
+```
+
+The result is `release/WaterWolf-Setup-0.1.0-x64.exe`. It is not code signed, so Windows may show a publisher warning.
+
 Opening `index.html` directly as a `file://` URL does not run the Vite app. Use the dev server or serve `dist/` after building.
 
 ## Included
