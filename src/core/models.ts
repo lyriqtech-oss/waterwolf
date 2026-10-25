@@ -1,4 +1,4 @@
-export type PageId = 'newtab'|'settings'|'agents'|'workspace'|'files'|'bookmarks'|'downloads'|'history'|'extensions'|'about'|'billing'|'vault'|'schools'|'voxa'|'modelhub'|'agentpay'|'terminal'|'engine';
+export type PageId = 'newtab'|'search'|'settings'|'agents'|'workspace'|'files'|'bookmarks'|'downloads'|'history'|'extensions'|'about'|'billing'|'vault'|'schools'|'voxa'|'modelhub'|'agentpay'|'terminal'|'engine';
 export type AIMode = 'off'|'local'|'auto'|'cloud';
 export type ProtectionMode = 'standard'|'strict'|'custom';
 export type Theme = 'light'|'dark'|'system';
@@ -19,6 +19,8 @@ export interface BrowserExtension { id:string; name:string; enabled:boolean; pin
 export interface BrowserDownload { id:string; name:string; sizeBytes:number; status:'completed'|'downloading'|'failed'; }
 export interface Bookmark { id:string; title:string; url:string; spaceId:string; createdAt:string; }
 export interface WorkspaceItem { id:string; title:string; kind:'page'|'note'|'document'|'file'; project?:string; }
-export const INTERNAL_PAGES: Record<string,PageId> = {newtab:'newtab',settings:'settings',agents:'agents',workspace:'workspace',files:'files',bookmarks:'bookmarks',downloads:'downloads',history:'history',extensions:'extensions',about:'about',billing:'billing',vault:'vault',schools:'schools',voxa:'voxa',modelhub:'modelhub',agentpay:'agentpay',terminal:'terminal',engine:'engine'};
+export const INTERNAL_PAGES: Record<string,PageId> = {newtab:'newtab',search:'search',settings:'settings',agents:'agents',workspace:'workspace',files:'files',bookmarks:'bookmarks',downloads:'downloads',history:'history',extensions:'extensions',about:'about',billing:'billing',vault:'vault',schools:'schools',voxa:'voxa',modelhub:'modelhub',agentpay:'agentpay',terminal:'terminal',engine:'engine'};
 export const pageUrl=(page:PageId)=>`waterwolf://${page}`;
-export const parseInternalUrl=(url:string):PageId|null=>{const match=/^waterwolf:\/\/([a-z]+)(?:\/)?$/i.exec(url.trim());return match?INTERNAL_PAGES[match[1]!.toLowerCase()]??null:null};
+export const searchUrl=(query:string)=>`waterwolf://search?q=${encodeURIComponent(query.trim())}`;
+export const parseSearchUrl=(url:string)=>{const match=/^waterwolf:\/\/search\?q=([^#]*)$/i.exec(url.trim());if(!match)return null;try{return decodeURIComponent(match[1]!.replace(/\+/g,' '))}catch{return null}};
+export const parseInternalUrl=(url:string):PageId|null=>{if(parseSearchUrl(url)!==null)return 'search';const match=/^waterwolf:\/\/([a-z]+)(?:\/)?$/i.exec(url.trim());return match?INTERNAL_PAGES[match[1]!.toLowerCase()]??null:null};

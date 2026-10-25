@@ -24,6 +24,7 @@ Opening `index.html` directly as a `file://` URL does not run the Vite app. Use 
 ## Included
 
 - Browser shell with horizontal or vertical tabs, omnibox, sidebar, five Spaces, tab search, Split View, New Tab and internal `waterwolf://` pages.
+- WaterWolf Search preview at `waterwolf://search?q=...`: address-bar queries open a branded results page, and matching local bookmarks appear there. Live web results are not connected; displaying DuckDuckGo results in a WaterWolf-designed page requires an approved results integration.
 - Local bookmarks: save or edit the current page from the toolbar, search saved pages, reopen them, and remove them. Bookmarks persist in this browser's local storage.
 - Engine Lab at `waterwolf://engine`: an independent HTML/CSS-subset parser and layout prototype that paints onto canvas. It supports selected selectors, colors, fonts, margins, box width, padding and borders. Controlled local documents have engine-owned back/forward history; text fields and buttons are drawn on canvas with accessible controls beneath the preview. See [ENGINE_ROADMAP.md](ENGINE_ROADMAP.md) for the eight-week research plan.
 - Lyriq Command (`Ctrl/Cmd + K`), WaterWolf Actions menu, Agent Center, Shield UI, ecosystem drawer, Settings, Model Hub, Workspace, Files, Vault, Agent Pay, Schools, VOXA, Billing and About.
