@@ -40,13 +40,13 @@ To build a Windows installer with an installation wizard, desktop shortcut, and 
 npm run pack:win:installer
 ```
 
-The result is `release/WaterWolf-Setup-0.2.0-x64.exe`. It is not code signed, so Windows may show a publisher warning.
+The result is `release/WaterWolf-Setup-0.2.1-x64.exe`. It is not code signed, so Windows may show a publisher warning.
 
 ## Updates
 
 The installed Windows edition checks the public [GitHub Releases](https://github.com/lyriqtech-oss/waterwolf/releases) feed shortly after startup and every six hours. A persistent **Update** button appears when a newer stable version is found. Open **About WaterWolf** to download it and then choose **Restart and install**. The user must start both steps; portable and development builds do not update through this flow. The 0.1.0 installer did not include the updater, so install 0.2.0 once to enable future update checks.
 
-The tag workflow builds and publishes the NSIS installer, its checksum metadata (`latest.yml`), and block map for each `v<package version>` tag. Do not reuse or overwrite a published version; increment `package.json` and `package-lock.json` for every release. Unsigned Windows builds are suitable only for early testing. A production release should be Authenticode signed and tested from an already installed version before broad distribution.
+The tag workflow builds and publishes the NSIS installer, its checksum metadata (`latest.yml`), and block map for each `v<package version>` tag, then verifies that all three assets are present. Do not reuse or overwrite a published version; increment `package.json` and `package-lock.json` for every release. Unsigned Windows builds are suitable only for early testing. A production release should be Authenticode signed and tested from an already installed version before broad distribution.
 
 Opening `index.html` directly as a `file://` URL does not run the Vite app. Use the dev server or serve `dist/` after building.
 

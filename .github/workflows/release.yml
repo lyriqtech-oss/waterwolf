@@ -26,9 +26,28 @@ jobs:
         run: |
           $version = (Get-Content package.json | ConvertFrom-Json).version
           if ("v$version" -ne "${{ github.ref_name }}") { throw "Tag does not match package version" }
-      - name: Build and publish NSIS installer
+      - name: Build NSIS installer and update metadata
+        shell: pwsh
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --win nsis --x64 --publish never
+      - name: Publish and verify complete release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npx electron-builder --win nsis --x64 --publish always
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $tag = "v$version"
+          $installer = "release/WaterWolf-Setup-$version-x64.exe"
+          $blockmap = "$installer.blockmap"
+          foreach ($file in @($installer, $blockmap, 'release/latest.yml')) {
+            if (-not (Test-Path $file)) { throw "Missing release file: $file" }
+          }
+          gh release create $tag $installer $blockmap release/latest.yml --verify-tag --title "WaterWolf $version" --notes "WaterWolf for Windows. Update checks are built into the installed edition."
+          if ($LASTEXITCODE -ne 0) { throw 'Could not publish release' }
+          $release = gh release view $tag --json assets | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Could not verify release' }
+          $names = @($release.assets | ForEach-Object { $_.name })
+          foreach ($required in @((Split-Path $installer -Leaf), (Split-Path $blockmap -Leaf), 'latest.yml')) {
+            if ($required -notin $names) { throw "Release is missing $required" }
+          }
