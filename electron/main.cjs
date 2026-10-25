@@ -3,6 +3,8 @@ const { app, BrowserWindow, WebContentsView, ipcMain, session } = require('elect
 const ai = require('./ai.cjs');
 const { externalUrl, createSecurityState } = require('./security.cjs');
 const { createLiveAgent } = require('./live-agent.cjs');
+const { createUpdateService } = require('./updates.cjs');
+const { autoUpdater } = require('electron-updater');
 
 let window;
 let activeTabId = null;
@@ -12,6 +14,9 @@ const pendingSummaries = new Map();
 const pendingResearch = new Map();
 const protectedSessions = new Set();
 const security = createSecurityState();
+const updates = createUpdateService({ app, updater: autoUpdater, portable: Boolean(process.env.PORTABLE_EXECUTABLE_FILE), emit: state => {
+  if (window && !window.isDestroyed()) window.webContents.send('waterwolf:update-state', state);
+} });
 const liveAgent = createLiveAgent({ protectSession, emit: update => {
   if (window && !window.isDestroyed()) window.webContents.send('waterwolf:agent-live-progress', update);
 } });
@@ -106,6 +111,10 @@ function makeView(id, spaceId) {
 }
 
 function registerHandlers() {
+  ipcMain.handle('waterwolf:update-status', event => { requireShell(event); return updates.status(); });
+  ipcMain.handle('waterwolf:update-check', event => { requireShell(event); return updates.check(); });
+  ipcMain.handle('waterwolf:update-download', event => { requireShell(event); return updates.download(); });
+  ipcMain.handle('waterwolf:update-install', event => { requireShell(event); return updates.install(); });
   ipcMain.handle('waterwolf:agent-live-run', (event, runId, question) => { requireShell(event); return liveAgent.run(runId, question); });
   ipcMain.handle('waterwolf:agent-live-cancel', (event, runId) => { requireShell(event); return liveAgent.cancel(runId); });
   ipcMain.handle('waterwolf:agent-live-ask', (event, sessionId, question) => { requireShell(event); return liveAgent.ask(sessionId, question); });
@@ -236,6 +245,7 @@ app.whenReady().then(async () => {
   const devUrl = process.env.WATERWOLF_DEV_URL;
   if (!app.isPackaged && devUrl && /^http:\/\/(127\.0\.0\.1|localhost):\d+\/?$/.test(devUrl)) await window.loadURL(devUrl);
   else await window.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  updates.start();
 });
 
 app.on('window-all-closed', () => app.quit());

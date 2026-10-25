@@ -1,6 +1,15 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('waterwolfDesktop', {
+  updateStatus: () => ipcRenderer.invoke('waterwolf:update-status'),
+  updateCheck: () => ipcRenderer.invoke('waterwolf:update-check'),
+  updateDownload: () => ipcRenderer.invoke('waterwolf:update-download'),
+  updateInstall: () => ipcRenderer.invoke('waterwolf:update-install'),
+  onUpdateState: callback => {
+    const listener = (_event, state) => callback(state);
+    ipcRenderer.on('waterwolf:update-state', listener);
+    return () => ipcRenderer.removeListener('waterwolf:update-state', listener);
+  },
   navigate: (tabId, url, spaceId) => ipcRenderer.invoke('waterwolf:navigate', tabId, url, spaceId),
   select: tabId => ipcRenderer.invoke('waterwolf:select', tabId),
   layout: bounds => ipcRenderer.invoke('waterwolf:layout', bounds),

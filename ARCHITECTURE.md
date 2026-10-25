@@ -30,6 +30,8 @@ Live research uses a separate nonpersistent Chromium partition. One run searches
 
 ## Browser integration
 
+The installed Windows build embeds a GitHub Releases update feed. The main process checks it shortly after launch and every six hours, and exposes a narrow status/check/download/install IPC bridge to the shell. Download and installation require separate user actions while releases remain unsigned; the portable build and development shell do not check. NSIS update metadata and checksum are generated with each versioned build. Authenticode signing and a real upgrade test from an earlier installed release are required before treating this as a production rollout channel.
+
 The first privileged host uses Electron `WebContentsView` for external HTTP/HTTPS pages. The shell calls only validated IPC actions, and external pages have no preload or Node access. The host sends URL, title and loading events back to React. Popup requests become WaterWolf tabs. Unsupported schemes, redirects, credential-bearing addresses, site permission requests and checks, and all downloads are blocked. The app shell has a Content Security Policy; the renderer cannot access the privileged session objects. Shield reports local aggregate counts without retaining requested URLs. Chromium handles TLS certificate rejection by default. The next milestones must add a reviewed download workflow with scanning, phishing/malware reputation, history, extensions, granular permission prompts, and active tracker blocking.
 
 Spaces group tabs and use separate persistent Chromium partitions for cookies and site storage. Full Space isolation still needs separate history, credentials, extensions, agents and optional proxy settings.

@@ -6,7 +6,20 @@ export interface DesktopTabUpdate {
   error?: string;
 }
 
+export interface UpdateState {
+  status: 'unavailable' | 'idle' | 'checking' | 'current' | 'available' | 'downloading' | 'ready' | 'error';
+  currentVersion: string;
+  availableVersion: string | null;
+  progress: number;
+  message: string;
+}
+
 export interface DesktopBrowser {
+  updateStatus(): Promise<UpdateState>;
+  updateCheck(): Promise<UpdateState>;
+  updateDownload(): Promise<UpdateState>;
+  updateInstall(): Promise<boolean>;
+  onUpdateState(callback: (state: UpdateState) => void): () => void;
   agentLiveRun(runId: string, question: string): Promise<{ sessionId: string; answer: string; sources: { number: number; title: string; url: string }[] }>;
   agentLiveCancel(runId: string): Promise<boolean>;
   agentLiveAsk(sessionId: string, question: string): Promise<string>;
