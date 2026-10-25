@@ -1,5 +1,5 @@
-const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
-const FIRST_CHECK_MS = 15 * 1000;
+const CHECK_INTERVAL_MS = 60 * 60 * 1000;
+const FIRST_CHECK_MS = 5 * 1000;
 
 function createUpdateService({ app, updater, emit, portable = false, platform = process.platform, schedule = setTimeout, repeat = setInterval }) {
   const supported = platform === 'win32' && app.isPackaged && !portable;

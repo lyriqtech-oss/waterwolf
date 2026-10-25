@@ -7,8 +7,12 @@ export function UpdatePanel() {
   const [state, setState] = useState<UpdateState | null>(null);
   useEffect(() => {
     if (!desktop) return;
-    void desktop.updateStatus().then(setState);
-    return desktop.onUpdateState(setState);
+    const unsubscribe = desktop.onUpdateState(setState);
+    void desktop.updateStatus().then(current => {
+      setState(current);
+      if (current.status === 'idle' || current.status === 'current' || current.status === 'error') void desktop.updateCheck().then(setState);
+    });
+    return unsubscribe;
   }, [desktop]);
   const busy = state?.status === 'checking' || state?.status === 'downloading';
   return <section className="update-panel" aria-label="WaterWolf updates">
