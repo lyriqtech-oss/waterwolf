@@ -7,9 +7,10 @@ export interface DesktopTabUpdate {
 }
 
 export interface DesktopBrowser {
-  aiStatus(): Promise<{ configured: boolean; model: string }>;
-  aiSave(settings: { key: string; model: string }): Promise<{ configured: boolean; model: string }>;
-  aiRemove(): Promise<{ configured: boolean; model: string }>;
+  aiStatus(): Promise<{ configured: boolean; provider: 'openai' | 'gemini'; model: string }>;
+  aiSave(settings: { provider: 'openai' | 'gemini'; key: string; model: string }): Promise<{ configured: boolean; provider: 'openai' | 'gemini'; model: string }>;
+  aiTest(): Promise<string>;
+  aiRemove(): Promise<{ configured: boolean; provider: 'openai' | 'gemini'; model: string }>;
   aiPreview(tabId: string): Promise<{ url: string; title: string; text: string; truncated: boolean }>;
   aiSummarize(tabId: string, url: string): Promise<string>;
   navigate(tabId: string, url: string, spaceId: string): Promise<{ ok: boolean }>;

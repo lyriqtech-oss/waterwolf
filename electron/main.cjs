@@ -73,6 +73,7 @@ function makeView(id, spaceId) {
 function registerHandlers() {
   ipcMain.handle('waterwolf:ai-status', event => { requireShell(event); return ai.status(); });
   ipcMain.handle('waterwolf:ai-save', (event, settings) => { requireShell(event); return ai.save(settings); });
+  ipcMain.handle('waterwolf:ai-test', event => { requireShell(event); return ai.testConnection(); });
   ipcMain.handle('waterwolf:ai-remove', event => { requireShell(event); return ai.remove(); });
   ipcMain.handle('waterwolf:ai-preview', async (event, rawId) => {
     requireShell(event);

@@ -18,11 +18,11 @@ The experimental `src/engine/` module is a separate HTML-subset parser, layout e
 
 1. **Classic:** Default. No model, account, or cloud calls. Browsing must remain first-class.
 2. **Local Intelligence:** `LocalModelProvider` allows ONNX, WebGPU, llama.cpp, DirectML, CoreML or other implementations without changing the UI. `NoLocalModelProvider` reports unavailable cleanly.
-3. **Cloud:** An initial OpenAI API connection is available in the desktop app for one approved page-summary action. `CloudModelProvider` and `routeAIRequest` still define broader future routing; agents and Lyriq Cloud are not connected.
+3. **Cloud:** Initial Google Gemini and OpenAI API connections are available in the desktop app for one approved page-summary action. `CloudModelProvider` and `routeAIRequest` still define broader future routing; agents and Lyriq Cloud are not connected.
 
 The router keeps tier-0 actions deterministic, prefers a local provider for simple tasks when available, denies cloud fallback for local-only requests, and checks budget before a cloud decision. Production must add plan limits, real estimates, caching with privacy boundaries, model observability, and explicit cloud consent.
 
-The desktop AI bridge stores only an encrypted API key and model name in the app profile. The renderer cannot retrieve the key. The page-summary flow extracts up to 12,000 characters from the selected Chromium tab, shows them to the user, and requires a separate click to send them. The host rechecks the tab URL before sending, limits the model output, disables API-side storage where supported, and treats page text as untrusted data. This is a single action, not an autonomous agent. Future providers should use dedicated adapters and explicit destination disclosure.
+The desktop AI bridge stores the provider name, model name, and encrypted API key in the app profile. The renderer cannot retrieve the key. A separate connection test sends only a short fixed prompt. The page-summary flow extracts up to 12,000 characters from the selected Chromium tab, shows them to the user, and requires a separate click to send them to the named provider. The host rechecks the tab URL before sending, limits the model output, disables API-side storage where supported, and treats page text as untrusted data. This is a single action, not an autonomous agent. Further providers should use dedicated adapters and explicit destination disclosure.
 
 ## Browser integration
 

@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('waterwolfDesktop', {
   reload: tabId => ipcRenderer.invoke('waterwolf:reload', tabId),
   aiStatus: () => ipcRenderer.invoke('waterwolf:ai-status'),
   aiSave: settings => ipcRenderer.invoke('waterwolf:ai-save', settings),
+  aiTest: () => ipcRenderer.invoke('waterwolf:ai-test'),
   aiRemove: () => ipcRenderer.invoke('waterwolf:ai-remove'),
   aiPreview: tabId => ipcRenderer.invoke('waterwolf:ai-preview', tabId),
   aiSummarize: (tabId, url) => ipcRenderer.invoke('waterwolf:ai-summarize', tabId, url),
