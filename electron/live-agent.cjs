@@ -1,13 +1,14 @@
 const { randomUUID } = require('node:crypto');
+const { lookup } = require('node:dns').promises;
 const { WebContentsView, session } = require('electron');
-const { publicResearchUrl } = require('./security.cjs');
+const { publicResearchUrl, publicResearchDestination } = require('./security.cjs');
 const ai = require('./ai.cjs');
 
 const SEARCH_SCRIPT = `Array.from(document.querySelectorAll('a.result__a, a[data-testid="result-title-a"], article h2 a')).slice(0,12).map(a=>({title:(a.innerText||a.textContent||'').trim().slice(0,250),url:a.href}))`;
 const MAX_SOURCES = 3;
 const SESSION_MS = 30 * 60 * 1000;
 
-function createLiveAgent({ protectSession, emit }) {
+function createLiveAgent({ protectSession, emit, recordBlocked = () => {} }) {
   const conversations = new Map();
   let active = null;
   let networkFilterInstalled = false;
@@ -40,8 +41,9 @@ function createLiveAgent({ protectSession, emit }) {
     if (!networkFilterInstalled) {
       networkFilterInstalled = true;
       webSession.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
-        try { publicResearchUrl(details.url); callback({ cancel: false }); }
-        catch { callback({ cancel: true }); }
+        publicResearchDestination(details.url, host => lookup(host, { all: true }))
+          .then(() => callback({ cancel: false }))
+          .catch(() => { recordBlocked(); callback({ cancel: true }); });
       });
     }
     const view = new WebContentsView({ webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false, webSecurity: true, webviewTag: false, partition } });
@@ -105,8 +107,10 @@ function createLiveAgent({ protectSession, emit }) {
       progress(runId, current.cancelled ? 'cancelled' : 'error', error instanceof Error ? error.message : 'Research failed.');
       throw error;
     } finally {
-      active = null;
       if (!contents.isDestroyed()) contents.close();
+      try { await webSession.clearStorageData(); await webSession.clearCache(); }
+      catch { /* Session is temporary and will be removed when the app exits. */ }
+      active = null;
     }
   }
 

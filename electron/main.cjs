@@ -17,10 +17,17 @@ const security = createSecurityState();
 const updates = createUpdateService({ app, updater: autoUpdater, portable: Boolean(process.env.PORTABLE_EXECUTABLE_FILE), emit: state => {
   if (window && !window.isDestroyed()) window.webContents.send('waterwolf:update-state', state);
 } });
-const liveAgent = createLiveAgent({ protectSession, emit: update => {
+const liveAgent = createLiveAgent({ protectSession, recordBlocked: () => security.record('agentNetwork'), emit: update => {
   if (window && !window.isDestroyed()) window.webContents.send('waterwolf:agent-live-progress', update);
 } });
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,100}$/;
+
+app.on('certificate-error', (event, _contents, _url, _error, _certificate, callback) => {
+  security.record('certificates');
+  securityNotice('Blocked a connection with an invalid security certificate.');
+  event.preventDefault();
+  callback(false);
+});
 
 function requireShell(event) {
   if (!window || event.sender !== window.webContents) throw new Error('Unauthorized sender');

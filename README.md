@@ -40,7 +40,7 @@ To build a Windows installer with an installation wizard, desktop shortcut, and 
 npm run pack:win:installer
 ```
 
-The result is `release/WaterWolf-Setup-0.3.1-x64.exe`. It is not code signed, so Windows may show a publisher warning.
+The result is `release/WaterWolf-Setup-0.4.0-x64.exe`. It is not code signed, so Windows may show a publisher warning.
 
 ## Updates
 
@@ -75,5 +75,5 @@ The desktop app uses Electron's Chromium runtime for real pages; it is not yet a
 
 The live research agent can search and read public HTTPS pages, but it cannot click, write, pay, download, or run unattended. Search results and AI summaries can be wrong or stale; inspect the linked domain and page date before relying on a claim. The temporary research session is separate from normal Space profiles, and its conversation is held in memory only. General-purpose tool-using agents remain unconnected. The registry is deny-by-default, and sensitive tools require a matching one-time approval. Production integration also needs stronger network isolation, authenticated identities, persisted and expiring grants, durable audit records, and browser-process enforcement.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for module boundaries, planned integration order and security requirements, and [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) for the browser interface research. The original one-file UI prototype is archived in the task workspace under `work/waterwolf-v1` for reference.
+See [SECURITY.md](SECURITY.md) for protections and their limits, [ARCHITECTURE.md](ARCHITECTURE.md) for module boundaries and planned integration order, and [DESIGN_REFERENCES.md](DESIGN_REFERENCES.md) for the browser interface research. The original one-file UI prototype is archived in the task workspace under `work/waterwolf-v1` for reference.
 
